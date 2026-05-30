@@ -1,0 +1,266 @@
+:root {
+  --bg-color: #eef2f7;
+  --card-bg: #ffffff;
+  --primary: #2563eb;       /* 진한 파랑 (신뢰감) */
+  --primary-dark: #1e40af;
+  --accent: #16a34a;        /* 초록 (로또/행운) */
+  --accent-dark: #15803d;
+  --secondary: #64748b;     /* 회색 */
+  --text-main: #111827;     /* 거의 검정 */
+  --text-sub: #4b5563;
+  --border: #e5e7eb;
+
+  /* 공 색상 (동행복권 공식 색 규칙) */
+  --ball-1: #fbc400; /* 1~10  노랑 */
+  --ball-2: #69c8f2; /* 11~20 파랑 */
+  --ball-3: #ff7272; /* 21~30 빨강 */
+  --ball-4: #aaaaaa; /* 31~40 회색 */
+  --ball-5: #b0d840; /* 41~45 초록 */
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0; padding: 20px;
+  background: linear-gradient(180deg, #eef2f7 0%, #e2e8f0 100%);
+  min-height: 100vh;
+  font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  color: var(--text-main);
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* 카드 디자인 */
+.card {
+  background: var(--card-bg);
+  border-radius: 24px;
+  padding: 0 22px 28px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+/* 헤더 - 그라데이션 */
+.header {
+  text-align: center;
+  margin: 0 -22px 28px;
+  padding: 30px 20px 26px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 60%, #15803d 100%);
+  color: #fff;
+}
+.header h1 { margin: 0; font-size: 28px; letter-spacing: -1px; }
+.subtitle { margin: 6px 0 0; color: rgba(255,255,255,0.9); font-size: 16px; }
+
+/* 컨트롤 영역 */
+.controls { margin-bottom: 25px; }
+.control-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.label-big { font-weight: bold; font-size: 19px; }
+
+/* +/- 버튼 (아주 크게) */
+.stepper { display: flex; align-items: center; gap: 10px; }
+.btn-step {
+  width: 50px; height: 50px; border-radius: 12px;
+  border: 2px solid var(--border); background: #fff;
+  font-size: 28px; font-weight: bold; color: var(--primary);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.btn-step:active { background: #eff6ff; }
+#setCount {
+  width: 60px; text-align: center; font-size: 24px; font-weight: bold;
+  border: none; color: #000; background: transparent;
+}
+
+/* 체크박스 */
+.checkbox-row { border-bottom: none; cursor: pointer; }
+.checkbox-row input { display: none; }
+.check-label { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.check-label .box {
+  width: 28px; height: 28px; border: 2px solid #ccc; border-radius: 6px;
+  position: relative; transition: 0.2s;
+}
+input:checked + .check-label .box {
+  background: var(--primary); border-color: var(--primary);
+}
+input:checked + .check-label .box::after {
+  content: '✔'; color: #fff; position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 18px;
+}
+.check-label .text { font-size: 19px; font-weight: bold; }
+
+/* 메인 버튼들 */
+.actions { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 30px; }
+.btn-big {
+  border: none; border-radius: 16px; padding: 20px 0;
+  font-size: 20px; font-weight: bold; cursor: pointer;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+  transition: transform 0.1s;
+}
+.btn-big:active { transform: translateY(4px); box-shadow: none; }
+.btn-big.primary { background: var(--accent); color: #fff; }
+.btn-big.secondary { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
+.btn-big.warn { background: #fee2e2; color: #ef4444; }
+
+/* 결과 영역 */
+.result-area {
+  min-height: 120px; background: #f8fafc; border-radius: 16px;
+  padding: 20px; margin-bottom: 20px; border: 1px solid var(--border);
+}
+.message { text-align: center; color: var(--text-sub); margin-top: 30px; }
+
+.lotto-set {
+  background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 15px; margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  animation: rowIn 0.35s ease both;
+}
+.ball-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+/* 공 디자인 */
+.ball {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: #fff;
+  box-shadow: inset 0 -3px 5px rgba(0,0,0,0.2);
+  animation: ballPop 0.3s ease both;
+}
+.ball.bonus { margin-left: 15px; position: relative; }
+.ball.bonus::before {
+  content: '보너스'; position: absolute; top: -18px; left: 50%;
+  transform: translateX(-50%); font-size: 11px; color: #666; white-space: nowrap;
+}
+/* 맞은 공 강조 */
+.ball.hit { outline: 3px solid #16a34a; outline-offset: 2px; }
+
+/* 1~10번 공 글자색 조정 (가독성) */
+.ball[style*="--ball-1"] { color: #222; text-shadow: none; }
+
+/* 등장 애니메이션 */
+@keyframes ballPop {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes rowIn {
+  0% { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* 하단 툴바 버튼 */
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-top: 10px;
+}
+.tool-btn {
+  flex: 1 1 calc(50% - 5px); background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 0;
+  font-size: 15px; font-weight: bold; color: var(--text-main);
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.tool-btn:hover { background: #f9fafb; }
+.tool-btn .icon { font-size: 20px; margin-bottom: 2px; }
+
+/* 고급 설정 (숨김) */
+.advanced-settings {
+  margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 20px;
+}
+.advanced-settings summary { color: #888; cursor: pointer; padding: 10px; font-size: 15px; }
+.settings-panel { background: #f8fafc; padding: 15px; border-radius: 10px; margin-top: 10px; }
+.setting-row { margin-bottom: 15px; }
+.setting-row label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 15px; }
+.setting-row input[type="text"] {
+  width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px;
+}
+.setting-row.split { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; align-items: end; }
+.btn.small { padding: 8px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+.btn.small.blue { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* 패널 공통 (전체화면 오버레이) */
+.history-panel {
+  position: fixed; inset: 0; background: #fff; z-index: 1000;
+  display: flex; flex-direction: column; padding: 20px;
+  overflow-y: auto;
+}
+.history-panel[hidden] { display: none !important; }
+
+.history-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 20px; border-bottom: 2px solid #eee;
+}
+.history-header h2 { margin: 0; font-size: 22px; }
+.btn-close {
+  background: none; border: none; font-size: 18px; font-weight: bold; padding: 10px; cursor: pointer;
+}
+.history-list {
+  flex: 1; overflow-y: auto; padding: 20px 0;
+}
+.history-item {
+  background: #f8fafc; border: 1px solid #eee; border-radius: 10px;
+  padding: 15px; margin-bottom: 10px; font-size: 16px; line-height: 1.6;
+}
+.history-footer { padding-top: 15px; }
+
+/* 당첨 확인 패널 */
+.check-body { flex: 1; padding-top: 18px; }
+.check-source {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 16px;
+}
+.round-select {
+  flex: 1; max-width: 60%; padding: 12px; font-size: 17px; font-weight: bold;
+  border: 1px solid #ccc; border-radius: 10px; background: #fff; color: var(--text-main);
+}
+.win-numbers {
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 14px;
+  padding: 16px; margin-bottom: 18px;
+}
+.win-date { text-align: center; color: var(--text-sub); font-size: 15px; margin-bottom: 10px; }
+.win-balls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+.win-plus { font-size: 22px; font-weight: bold; color: #888; margin: 0 4px; }
+
+.manual-entry { margin-bottom: 20px; }
+.manual-entry summary { color: #888; cursor: pointer; padding: 8px 0; font-size: 15px; }
+.manual-panel { background: #f8fafc; padding: 15px; border-radius: 10px; }
+.manual-hint { margin: 0 0 10px; font-size: 14px; color: var(--text-sub); }
+.manual-inputs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.manual-num {
+  width: 52px; padding: 12px 0; text-align: center; font-size: 18px; font-weight: bold;
+  border: 1px solid #ccc; border-radius: 8px;
+}
+.manual-num.bonus { border-color: #ff7272; }
+
+.check-title { font-size: 18px; margin: 8px 0 12px; }
+.check-results .message { margin-top: 10px; }
+.check-item {
+  background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px; margin-bottom: 10px;
+}
+.check-item-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px; font-size: 15px; color: var(--text-sub);
+}
+.rank-badge { font-weight: bold; padding: 4px 12px; border-radius: 999px; font-size: 15px; }
+.rank-win { background: #16a34a; color: #fff; }
+.rank-miss { background: #f1f5f9; color: #64748b; }
+.check-item .ball { width: 36px; height: 36px; font-size: 16px; animation: none; }
+
+/* 토스트 메시지 */
+.toast {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85); color: #fff; padding: 16px 24px;
+  border-radius: 12px; font-size: 18px; text-align: center; z-index: 2000;
+}
+
+/* 모바일 대응 */
+@media (max-width: 400px) {
+  .btn-big { font-size: 18px; }
+  .ball { width: 36px; height: 36px; font-size: 16px; }
+  .manual-num { width: 44px; }
+}

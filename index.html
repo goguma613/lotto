@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#16a34a" />
+  <title>로또 번호 생성기</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <main class="container">
+    <div class="card">
+      <header class="header">
+        <h1>🍀 로또 번호 생성기</h1>
+        <p class="subtitle">버튼만 누르면 행운의 번호가 나옵니다</p>
+      </header>
+
+      <section class="controls">
+        <div class="control-row">
+          <label class="label-big">몇 게임 뽑을까요?</label>
+          <div class="stepper">
+            <button type="button" class="btn-step minus" aria-label="빼기">－</button>
+            <input id="setCount" type="number" value="5" readonly />
+            <button type="button" class="btn-step plus" aria-label="더하기">＋</button>
+          </div>
+        </div>
+
+        <div class="control-row checkbox-row">
+          <input id="includeBonus" type="checkbox" checked />
+          <label for="includeBonus" class="check-label">
+            <span class="box"></span>
+            <span class="text">보너스 번호도 같이 보기</span>
+          </label>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button id="drawBtn" class="btn-big primary">
+          번호 뽑기
+        </button>
+        <button id="resetBtn" class="btn-big secondary">
+          다시 하기
+        </button>
+      </div>
+
+      <div id="result" class="result-area">
+        <div class="message">위 <strong>[번호 뽑기]</strong> 버튼을 눌러주세요</div>
+      </div>
+
+      <footer class="toolbar">
+        <button id="copyBtn" class="tool-btn">
+          <span class="icon">📋</span> 글자로 복사
+        </button>
+        <button id="saveBtn" class="tool-btn">
+          <span class="icon">💾</span> 이미지 저장
+        </button>
+        <button id="checkBtn" class="tool-btn">
+          <span class="icon">🎯</span> 당첨 확인
+        </button>
+        <button id="historyToggleBtn" class="tool-btn">
+          <span class="icon">🕒</span> 지난 기록
+        </button>
+      </footer>
+
+      <details class="advanced-settings">
+        <summary>고급 설정 (고정수/제외수)</summary>
+        <div class="settings-panel">
+          <div class="setting-row">
+            <label>
+              <input type="checkbox" id="chkAvoidHistory" checked>
+              <span>이전에 나온 조합은 안 뽑기</span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <label>꼭 넣을 번호 (고정수)</label>
+            <input type="text" id="inpFixed" placeholder="예: 1, 5" inputmode="numeric">
+          </div>
+          <div class="setting-row">
+            <label>뺄 번호 (제외수)</label>
+            <input type="text" id="inpExcluded" placeholder="예: 45" inputmode="numeric">
+          </div>
+           <div class="setting-row split">
+            <div>
+              <label>시드 모드</label>
+              <button id="btnSeedToggle" class="btn small" aria-pressed="false">OFF</button>
+            </div>
+            <div>
+              <label>시드 값</label>
+              <input type="text" id="inpSeed" placeholder="숫자 입력" disabled>
+            </div>
+          </div>
+          <div class="setting-actions">
+            <button id="btnPrefsSave" class="btn small blue">설정 저장</button>
+            <button id="btnPrefsReset" class="btn small">초기화</button>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- 지난 기록 패널 -->
+    <div id="historyPanel" class="history-panel" hidden>
+      <div class="history-header">
+        <h2>📜 뽑았던 기록</h2>
+        <button id="historyCloseBtn" class="btn-close">닫기 ✕</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+      <div class="history-footer">
+        <button id="clearHistoryBtn" class="btn-big warn">기록 모두 지우기</button>
+      </div>
+    </div>
+
+    <!-- 당첨 확인 패널 -->
+    <div id="checkPanel" class="history-panel" hidden>
+      <div class="history-header">
+        <h2>🎯 당첨 확인</h2>
+        <button id="checkCloseBtn" class="btn-close">닫기 ✕</button>
+      </div>
+
+      <div class="check-body">
+        <div class="check-source">
+          <label for="roundSelect" class="label-big">당첨 회차</label>
+          <select id="roundSelect" class="round-select"></select>
+        </div>
+
+        <div id="winNumbers" class="win-numbers">
+          <div class="message">당첨번호를 불러오는 중…</div>
+        </div>
+
+        <details class="manual-entry">
+          <summary>당첨번호 직접 입력 (인터넷 안 될 때)</summary>
+          <div class="manual-panel">
+            <p class="manual-hint">번호 6개와 보너스 1개를 입력하세요.</p>
+            <div class="manual-inputs">
+              <input class="manual-num" type="number" inputmode="numeric" min="1" max="45" placeholder="1">
+              <input class="manual-num" type="number" inputmode="numeric" min="1" max="45" placeholder="2">
+              <input class="manual-num" type="number" inputmode="numeric" min="1" max="45" placeholder="3">
+              <input class="manual-num" type="number" inputmode="numeric" min="1" max="45" placeholder="4">
+              <input class="manual-num" type="number" inputmode="numeric" min="1" max="45" placeholder="5">
+              <input class="manual-num" type="number" inputmode="numeric" min="1" max="45" placeholder="6">
+              <input id="manualBonus" class="manual-num bonus" type="number" inputmode="numeric" min="1" max="45" placeholder="+">
+            </div>
+            <button id="manualApplyBtn" class="btn small blue">이 번호로 확인</button>
+          </div>
+        </details>
+
+        <h3 class="check-title">내가 뽑아둔 번호 결과</h3>
+        <div id="checkResults" class="check-results"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
