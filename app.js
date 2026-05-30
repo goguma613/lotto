@@ -15,7 +15,8 @@
            seed: 12345
        },
        rng: null,
-       draws: []   // 당첨번호 데이터 (회차 내림차순)
+       draws: [],       // 당첨번호 데이터 (회차 내림차순)
+       drawsLoaded: false
    };
 
    // 요소 선택 편의 함수
@@ -68,7 +69,6 @@
        updateUIFromPrefs();
        bindEvents();
        if(state.prefs.seedMode) reseed(state.prefs.seed);
-       loadDraws();
 
        // 이미지 저장 기능 준비
        if(!window.html2canvas) {
@@ -257,28 +257,92 @@
    }
 
    /* ========== 당첨 확인 ========== */
-   async function loadDraws() {
+   // 인터넷에서 자동 조회 (smok95/lotto 공개 데이터, raw.githubusercontent 는 CORS 허용)
+   const REMOTE = {
+       base: 'https://raw.githubusercontent.com/smok95/lotto/main/results/',
+       baseRoundDate: Date.UTC(2002, 11, 7),   // 1회차 추첨일(토)
+       week: 7 * 24 * 60 * 60 * 1000,
+       recent: 6,                              // 드롭다운에 채울 최근 회차 수
+       perRequestTimeout: 4000,                // 요청 1건 제한
+       overallTimeout: 8000                    // 전체 로딩 상한 (멈춤 방지)
+   };
+
+   const validDraw = d => d && Array.isArray(d.numbers) && d.numbers.length === 6;
+   const sortDesc = (a, b) => b.round - a.round;
+
+   async function fetchRemoteRound(n) {
+       const ctrl = new AbortController();
+       const timer = setTimeout(() => ctrl.abort(), REMOTE.perRequestTimeout);
        try {
-           const res = await fetch(CONFIG.drawsUrl, { cache: 'no-store' });
-           if (!res.ok) throw new Error('not ok');
-           const data = await res.json();
-           if (Array.isArray(data)) {
-               state.draws = data
-                   .filter(d => d && Array.isArray(d.numbers) && d.numbers.length === 6)
-                   .sort((a,b) => b.round - a.round);
-           }
-       } catch(e) {
-           state.draws = [];   // 못 불러오면 수동 입력으로 안내
+           const r = await fetch(REMOTE.base + n + '.json', { cache: 'no-store', signal: ctrl.signal });
+           if (!r.ok) return null;
+           const j = await r.json();
+           if (!j || !Array.isArray(j.numbers) || j.numbers.length !== 6) return null;
+           return { round: j.draw_no, date: (j.date || '').slice(0, 10), numbers: j.numbers, bonus: j.bonus_no };
+       } catch (e) {
+           return null;
+       } finally {
+           clearTimeout(timer);
        }
    }
 
-   function openCheckPanel() {
+   // 함께 배포된 번들 데이터 (오프라인/지연 시 기준선)
+   async function loadLocalDraws() {
+       try {
+           const res = await fetch(CONFIG.drawsUrl, { cache: 'no-store' });
+           if (res.ok) {
+               const data = await res.json();
+               if (Array.isArray(data)) return data.filter(validDraw).sort(sortDesc);
+           }
+       } catch (e) {}
+       return [];
+   }
+
+   // 인터넷에서 최신 회차 자동 조회 (smok95/lotto, CORS 허용)
+   async function loadRemoteDraws() {
+       const guess = Math.floor((Date.now() - REMOTE.baseRoundDate) / REMOTE.week) + 1;
+       let latest = null;
+       for (let n = guess + 1; n > guess - 2 && !latest; n--) {
+           latest = await fetchRemoteRound(n);
+       }
+       if (!latest) return [];
+       const arr = [latest];
+       for (let n = latest.round - 1; n > latest.round - REMOTE.recent && n >= 1; n--) {
+           const d = await fetchRemoteRound(n);
+           if (d) arr.push(d);
+       }
+       return arr.sort(sortDesc);
+   }
+
+   async function loadDraws() {
+       // 1) 번들 데이터로 즉시 기준선 확보
+       state.draws = await loadLocalDraws();
+       // 2) 인터넷 최신으로 업그레이드 (성공 시에만 교체)
+       const remote = await loadRemoteDraws();
+       if (remote.length) state.draws = remote;
+   }
+
+   async function openCheckPanel() {
+       els.panelCheck.hidden = false;
+
+       // 처음 열 때 한 번만 불러오기 (전체 8초 상한 — 절대 멈추지 않음)
+       if (!state.drawsLoaded) {
+           els.roundSelect.innerHTML = '<option>불러오는 중…</option>';
+           els.winNumbers.innerHTML = '<div class="message">최신 당첨번호를<br>불러오는 중…</div>';
+           els.checkResults.innerHTML = '';
+           await Promise.race([
+               loadDraws(),
+               new Promise(resolve => setTimeout(resolve, REMOTE.overallTimeout))
+           ]);
+           if (state.draws.length) state.drawsLoaded = true; // 데이터 확보됐을 때만 캐시
+       }
+
        // 회차 드롭다운 채우기
        els.roundSelect.innerHTML = '';
        if (state.draws.length === 0) {
            const opt = document.createElement('option');
            opt.value = '';
-           opt.textContent = '데이터 없음 — 직접 입력하세요';
+           opt.textContent = '자동 조회 실패 — 직접 입력하세요';
            els.roundSelect.appendChild(opt);
        } else {
            state.draws.forEach((d, i) => {
@@ -290,7 +354,6 @@
        }
        els.roundSelect.selectedIndex = 0;
        renderSelectedRound();
-       els.panelCheck.hidden = false;
    }
 
    function renderSelectedRound() {
